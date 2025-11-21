@@ -3,11 +3,10 @@ import sys
 import math
 from ...mapa.Mapa import *
 
-WIDTH, HEIGHT = 800, 600
-BG_COLOR = (30, 30, 40)
+
 ENTITY_COLOR = (100, 200, 255)
 POINT_COLOR = (255, 100, 100)
-PATH_COLOR = (80, 80, 90)
+
 
 class Enemy:
     def __init__(self, x, y, speed=3):
