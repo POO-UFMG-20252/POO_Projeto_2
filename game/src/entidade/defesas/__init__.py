@@ -1,0 +1,1 @@
+from .DefesaBase import TorreBase

@@ -1,0 +1,1 @@
+from .EntidadeBase import Entidade
