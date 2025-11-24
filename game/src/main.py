@@ -44,6 +44,7 @@ class Jogo:
         
         self.font = pygame.font.SysFont("Arial", 24)
         self.font_pequena = pygame.font.SysFont("Arial", 18)
+        self.mostrar_leaderboard = False
         
         # Sistema de seleção de torres
         self.tipos_torres = [
@@ -213,6 +214,9 @@ class Jogo:
         
         # UI (Interface)
         self.desenhar_ui()
+
+        if self.game_over and self.mostrar_leaderboard:
+            self.desenhar_leaderboard()
     
     def desenhar_ui(self):
         money_text = self.font.render(f"Dinheiro: ${self.dinheiro}", True, BLACK)
@@ -287,6 +291,34 @@ class Jogo:
         instrucoes = self.font.render("Pressione ESC para voltar ao menu", True, (200, 200, 200))
         instrucoes_rect = instrucoes.get_rect(center=(WIDTH // 2, HEIGHT - 50))
         self.screen.blit(instrucoes, instrucoes_rect)
+
+        if not self.mostrar_leaderboard:
+            press_enter = self.font.render("Pressione ENTER para ver o ranking", True, (200,200,200))
+            press_enter_rect = press_enter.get_rect(center=(WIDTH//2, HEIGHT - 100))
+            self.screen.blit(press_enter, press_enter_rect)
+
+    def desenhar_leaderboard(self):
+        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 230))
+        self.screen.blit(overlay, (0, 0))
+
+        titulo = self.font.render("TOP 10 - LEADERBOARD", True, (255, 215, 0))
+        titulo_rect = titulo.get_rect(center=(WIDTH // 2, 80))
+        self.screen.blit(titulo, titulo_rect)
+
+        top10 = self.db.obter_top_10()
+        if not top10:
+            vazio = self.font.render("Nenhum registro ainda.", True, WHITE)
+            self.screen.blit(vazio, vazio.get_rect(center=(WIDTH // 2, HEIGHT // 2)))
+            return
+
+        for i, (nome, pontos, wave, mortes, data) in enumerate(top10, 1):
+            linha = f"{i}. {nome:<10}  {pontos:>4} pts   Wave {wave}"
+            texto = self.font.render(linha, True, WHITE)
+            self.screen.blit(texto, (WIDTH//2 - 180, 140 + i * 30))
+
+        instr = self.font.render("Pressione ENTER para voltar ao menu", True, (200,200,200))
+        self.screen.blit(instr, instr.get_rect(center=(WIDTH // 2, HEIGHT - 80)))
     
     def run(self):
         while self.running:
@@ -332,24 +364,35 @@ def main():
                 running = False
         
         elif estado == "jogo":
-            # Jogo principal
-            jogo.handle_events()
-            jogo.update()
-            jogo.draw()
             
-            # Verifica se o jogo terminou
+            # Se o jogo acabou, NÃO chamar handle_events()
             if jogo.game_over:
+                jogo.draw()  # ainda desenha a tela normal
+
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
+
                     if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_ESCAPE:
+                        # PRIMEIRO ENTER → abrir ranking
+                        if event.key == pygame.K_RETURN and not jogo.mostrar_leaderboard:
+                            jogo.mostrar_leaderboard = True
+
+                        # SEGUNDO ENTER → voltar para o menu
+                        elif event.key == pygame.K_RETURN and jogo.mostrar_leaderboard:
                             estado = "menu"
                             jogo = None
-                            print(" Voltando ao menu...")
-            elif not jogo.running:
-                running = False
-        
+
+                        elif event.key == pygame.K_ESCAPE:
+                            estado = "menu"
+                            jogo = None
+
+            else:
+                # Jogo normal (não está em game over)
+                jogo.handle_events()
+                jogo.update()
+                jogo.draw()
+
         pygame.display.flip()
         clock.tick(60)
     
