@@ -1,9 +1,9 @@
 class Player:
-    def __init__(self, vida, dinheiro):
+    def __init__(self, vida, dinheiro, inimigos_eliminados):
         self.vida = vida
         self.dinheiro = dinheiro
         self.pontuacao = 0
-    
+        self.inimigos_eliminados = inimigos_eliminados
     def receber_dano(self, dano):
         self.vida -= dano
         return self.vida <= 0
@@ -19,3 +19,6 @@ class Player:
     
     def adicionar_pontuacao(self, pontos):
         self.pontuacao += pontos
+
+    def adicionar_inimigo(self, inimigos_eliminados):
+        self.inimigos_eliminados += inimigos_eliminados

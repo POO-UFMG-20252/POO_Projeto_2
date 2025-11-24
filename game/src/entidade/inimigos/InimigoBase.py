@@ -4,7 +4,7 @@ from entidade import Entidade
 from mapa import PATH, ENEMY_SPEED, ENEMY_HP, REWARD, RED, GREEN
 
 class InimigoBase(Entidade):
-    def __init__(self, x, y, vida, velocidade, recompensa, cor, nome, tamanho=15):
+    def __init__(self, x, y, vida, velocidade, recompensa, cor, nome, tamanho=15, pontos=1):
         super().__init__(x, y)
         self.path_index = 0
         self.hp = vida
@@ -15,7 +15,7 @@ class InimigoBase(Entidade):
         self.nome = nome
         self.tamanho = tamanho
         self.alive = True
-    
+        self.pontos = pontos
     def move(self):
         if self.path_index < len(PATH) - 1:
             target_x, target_y = PATH[self.path_index + 1]

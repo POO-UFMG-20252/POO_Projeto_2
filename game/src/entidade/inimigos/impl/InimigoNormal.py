@@ -11,5 +11,6 @@ class InimigoNormal(InimigoBase):
             recompensa=REWARD,
             cor=RED,
             nome="Normal",
-            tamanho=15
+            tamanho=15,
+            pontos = 1
         )

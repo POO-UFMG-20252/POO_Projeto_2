@@ -12,7 +12,8 @@ class InimigoForte(InimigoBase):
             recompensa=int(REWARD * 2),  # 100% mais recompensa
             cor=(128, 0, 128),  # Roxo
             nome="Boss",
-            tamanho=20
+            tamanho=20,
+            pontos = 3
         )
 
     def draw(self, screen):

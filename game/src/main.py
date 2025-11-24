@@ -6,9 +6,9 @@ from mapa import *
 from entidade.inimigos.impl import InimigoNormal, InimigoRapido, InimigoForte
 from entidade.inimigos import Onda
 from entidade.defesas.impl import TorreNormal, TorreSniper, TorreRapida
-
-# CORREÇÃO: Importe do pacote menu
-from menu.Menu import Menu  # Agora importa do pacote menu
+from menu.Menu import Menu
+from database.database import Database
+from player import Player
 
 class Jogo:
     def __init__(self, nome_jogador="Jogador"):
@@ -19,6 +19,12 @@ class Jogo:
         
         self.nome_jogador = nome_jogador
         
+        # Sistema de Player com pontuação
+        self.player = Player(vida=10, dinheiro=120, inimigos_eliminados=0)
+        
+        # Banco de dados
+        self.db = Database()
+        
         self.inimigos = []
         self.torres = []
         self.projeteis = []
@@ -28,6 +34,7 @@ class Jogo:
         self.wave_timer = 0
         self.game_over = False
         self.running = True
+        self.pontuacao_salva = False  # Flag para salvar apenas uma vez
         
         self.wave_atual = 1
         self.onda = Onda(self.wave_atual)
@@ -45,6 +52,9 @@ class Jogo:
             {"classe": TorreSniper, "nome": "Sniper", "custo": 100, "cor": BLACK},
         ]
         self.torre_selecionada = 0
+        
+        print(f" Jogo iniciado para: {nome_jogador}")
+        print(f" Pontuação inicial: {self.player.pontuacao}")
     
     def handle_events(self):
         for event in pygame.event.get():
@@ -75,6 +85,7 @@ class Jogo:
             torre = tipo_torre["classe"](mx, my)
             self.torres.append(torre)
             self.dinheiro -= tipo_torre["custo"]
+            self.player.gastar_dinheiro(tipo_torre["custo"])
             print(f"Torre {tipo_torre['nome']} construída por {self.nome_jogador}!")
         else:
             print(f"Dinheiro insuficiente! Necessário: ${tipo_torre['custo']}")
@@ -98,7 +109,7 @@ class Jogo:
                     self.wave_atual += 1
                     self.onda = Onda(self.wave_atual)
                     self.aguardando_proxima_wave = False
-                    print(f"🏁 Wave {self.wave_atual} iniciada!")
+                    print(f" Wave {self.wave_atual} iniciada!")
             
             # Spawn de inimigos controlado pela onda
             inimigos_novos = self.onda.update()
@@ -118,14 +129,67 @@ class Jogo:
             # Atualizar Inimigos
             for inimigo in self.inimigos[:]:
                 dano_jogador = inimigo.update()
+                
                 if dano_jogador:
+                    # Inimigo chegou ao fim do caminho
                     self.vidas -= 1
+                    self.player.receber_dano(1)
                     self.inimigos.remove(inimigo)
+                    
                     if self.vidas <= 0:
                         self.game_over = True
+                        self.salvar_pontuacao_final()
+                
                 elif not inimigo.esta_ativo():
+                    #  INIMIGO FOI MORTO - ADICIONA PONTUAÇÃO E RECOMPENSA 
                     self.dinheiro += inimigo.recompensa
+                    self.player.adicionar_dinheiro(inimigo.recompensa)
+                    
+                    # ADICIONA OS PONTOS BASEADO NO TIPO DE INIMIGO
+                    self.player.adicionar_pontuacao(inimigo.pontos)
+                    self.player.adicionar_inimigo(1)
                     self.inimigos.remove(inimigo)
+        else:
+            # Se o jogo acabou, garante que a pontuação foi salva
+            if not self.pontuacao_salva:
+                self.salvar_pontuacao_final()
+    
+    def salvar_pontuacao_final(self):
+        """Salva a pontuação final no banco de dados"""
+        if not self.pontuacao_salva:
+            print("\n" + "="*50)
+            print(f" GAME OVER - {self.nome_jogador}")
+            print("="*50)
+            print(f" Pontuação Final: {self.player.pontuacao}")
+            print(f" Wave Alcançada: {self.wave_atual}")
+            print(f" Dinheiro Final: ${self.dinheiro}")
+            print(f" Torres Construídas: {len(self.torres)}")
+            print(f" Inimigos Eliminados: {self.player.inimigos_eliminados}")
+            print("="*50)
+            
+            # Salva no banco de dados
+            sucesso = self.db.salvar_pontuacao(
+                nome_player=self.nome_jogador,
+                pontuacao=self.player.pontuacao,
+                wave_alcancada=self.wave_atual,
+                dinheiro_final=self.dinheiro,
+                torres_construidas=len(self.torres),
+                inimigos_eliminados=self.player.inimigos_eliminados
+            )
+            
+            if sucesso:
+                print(" Pontuação salva no leaderboard!")
+                
+                # Mostra o Top 10
+                top_10 = self.db.obter_top_10()
+                if top_10:
+                    print("\n TOP 10 LEADERBOARD ")
+                    print("-" * 70)
+                    for i, (nome, pontos, wave, inimigos, data) in enumerate(top_10, 1):
+                        print(f"{i}º. {nome:20s} | {pontos:5d} pts | Wave {wave:2d} | {inimigos:4d} mortes")
+                    print("-" * 70)
+            
+            self.pontuacao_salva = True
     
     def draw(self):
         # Fundo (Grama)
@@ -155,9 +219,15 @@ class Jogo:
         lives_text = self.font.render(f"Vidas: {self.vidas}", True, BLACK)
         player_text = self.font_pequena.render(f"Jogador: {self.nome_jogador}", True, BLACK)
         
+        #  MOSTRA A PONTUAÇÃO NA TELA 
+        pontuacao_text = self.font.render(f"Pontos: {self.player.pontuacao}", True, (255, 215, 0))
+        eliminados_text = self.font_pequena.render(f"Eliminados: {self.player.inimigos_eliminados}", True, BLACK)
+        
         self.screen.blit(money_text, (10, 10))
         self.screen.blit(lives_text, (10, 40))
-        self.screen.blit(player_text, (10, 70))
+        self.screen.blit(pontuacao_text, (10, 70))
+        self.screen.blit(eliminados_text, (10, 100))
+        self.screen.blit(player_text, (10, 125))
         
         # Info da wave
         wave_text = self.font.render(f"Wave: {self.wave_atual}", True, BLACK)
@@ -187,7 +257,7 @@ class Jogo:
             self.desenhar_tela_game_over()
     
     def desenhar_tela_game_over(self):
-        """Desenha a tela de game over personalizada"""
+        """Desenha a tela de game over com pontuação"""
         # Fundo semi-transparente
         overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 200))
@@ -201,14 +271,16 @@ class Jogo:
         # Estatísticas do jogador
         stats = [
             f"Jogador: {self.nome_jogador}",
-            f"Wave alcançada: {self.wave_atual}",
-            f"Dinheiro final: ${self.dinheiro}",
-            f"Torres construídas: {len(self.torres)}"
+            f" Pontuação Final: {self.player.pontuacao}",
+            f" Wave alcançada: {self.wave_atual}",
+            f" Inimigos eliminados: {self.player.inimigos_eliminados}",
+            f" Dinheiro final: ${self.dinheiro}",
+            f" Torres construídas: {len(self.torres)}"
         ]
         
         for i, stat in enumerate(stats):
             texto = self.font.render(stat, True, (255, 255, 255))
-            texto_rect = texto.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 60 + i * 30))
+            texto_rect = texto.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 90 + i * 30))
             self.screen.blit(texto, texto_rect)
         
         # Instruções para voltar ao menu
@@ -242,7 +314,7 @@ def main():
     estado = "menu"
     nome_jogador = "Jogador"
     
-    menu = Menu(screen)  # ← AGORA DEVE FUNCIONAR
+    menu = Menu(screen)
     jogo = None
     
     while running:
@@ -256,7 +328,6 @@ def main():
                 nome_jogador = menu.get_nome_jogador()
                 jogo = Jogo(nome_jogador)
                 estado = "jogo"
-                print(f"🎮 Jogo iniciado para: {nome_jogador}")
             elif resultado == "sair":
                 running = False
         
@@ -275,7 +346,7 @@ def main():
                         if event.key == pygame.K_ESCAPE:
                             estado = "menu"
                             jogo = None
-                            print("↩️ Voltando ao menu...")
+                            print(" Voltando ao menu...")
             elif not jogo.running:
                 running = False
         

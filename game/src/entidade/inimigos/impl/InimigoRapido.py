@@ -12,7 +12,8 @@ class InimigoRapido(InimigoBase):
             recompensa=int(REWARD * 1.2),  # 20% mais recompensa
             cor=(255, 165, 0),  # Laranja
             nome="Rápido",
-            tamanho=12
+            tamanho=12,
+            pontos = 2
         )
 
     def draw(self, screen):
