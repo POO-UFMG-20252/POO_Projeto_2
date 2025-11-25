@@ -20,6 +20,9 @@ class TorreBase(Entidade):
         pass
 
     def update(self, inimigos, projeteis):
+        if self._cooldown < 0:
+            return
+            
         if self._cooldown > 0:
             self._cooldown -= 1
             return
@@ -54,6 +57,9 @@ class TorreBase(Entidade):
             "velocidade_ataque": 60 / self._cooldown_max,  
             "custo": self._custo
         }
+        
+    def esta_na_area(self, x_aux: int, y_aux: int):
+        return 25 >= math.hypot(x_aux - self._x, y_aux - self._y)
         
     @property
     def alcance(self):
