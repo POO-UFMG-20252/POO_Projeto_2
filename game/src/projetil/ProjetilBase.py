@@ -1,9 +1,9 @@
 import pygame
 import math
-from entidade import Entidade
+from entidade import EntidadeBase
 from config import BULLET_SPEED, YELLOW
 
-class ProjetilBase(Entidade):
+class ProjetilBase(EntidadeBase):
     def __init__(self, x, y, target, dano):
         super().__init__(x, y)
         self.__target = target

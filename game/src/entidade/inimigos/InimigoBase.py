@@ -1,9 +1,9 @@
 from abc import abstractmethod
 import math
-from entidade import Entidade
+from entidade import EntidadeBase
 from config import PATH
 
-class InimigoBase(Entidade):
+class InimigoBase(EntidadeBase):
     def __init__(self, x, y, vida, velocidade, recompensa, cor, nome, tamanho=15, pontos=1):
         super().__init__(x, y)
         self._path_index = 0

@@ -1,9 +1,9 @@
 import math
 from abc import ABC, abstractmethod
-from entidade import Entidade
+from entidade import EntidadeBase
 from projetil import ProjetilBase
 
-class TorreBase(Entidade):
+class TorreBase(EntidadeBase):
     def __init__(self, x, y, alcance, cooldown, dano, custo, cor, nome):
         super().__init__(x, y)
         self._alcance = alcance

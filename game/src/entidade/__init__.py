@@ -1,1 +1,1 @@
-from .EntidadeBase import Entidade
+from .EntidadeBase import EntidadeBase
