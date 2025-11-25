@@ -7,11 +7,11 @@ from entidade.inimigos.impl import InimigoNormal, InimigoRapido, InimigoForte
 from entidade.inimigos import Onda
 from entidade.defesas.impl import TorreNormal, TorreSniper, TorreRapida
 from menu.Menu import Menu
-from database.database import Database
+from database.Database import Database
 from player import Player
 
 class Jogo:
-    def __init__(self, nome_jogador="Jogador"):
+    def __init__(self, nome_jogador: str, database: Database):
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption(f"Tower Defense - {nome_jogador}")
@@ -23,7 +23,7 @@ class Jogo:
         self.player = Player(vida=10, dinheiro=120, inimigos_eliminados=0)
         
         # Banco de dados
-        self.db = Database()
+        self.db = database
         
         self.inimigos = []
         self.torres = []
@@ -346,7 +346,9 @@ def main():
     estado = "menu"
     nome_jogador = "Jogador"
     
-    menu = Menu(screen)
+    database = Database()
+    
+    menu = Menu(screen, database)
     jogo = None
     
     while running:
@@ -358,7 +360,7 @@ def main():
             
             if resultado == "iniciar":
                 nome_jogador = menu.get_nome_jogador()
-                jogo = Jogo(nome_jogador)
+                jogo = Jogo(nome_jogador, database)
                 estado = "jogo"
             elif resultado == "sair":
                 running = False

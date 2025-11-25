@@ -1,12 +1,16 @@
 import pygame
 from mapa import *
+from database.Database import Database
 
 class Menu:
-    def __init__(self, screen):
+    def __init__(self, screen, database: Database):
         self.screen = screen
+        self.database = database
+        
         self.font_titulo = pygame.font.SysFont("Arial", 48, bold=True)
         self.font_normal = pygame.font.SysFont("Arial", 32)
         self.font_pequena = pygame.font.SysFont("Arial", 24)
+        self.font_ranking = pygame.font.SysFont("Arial", 20)
         
         self.nome_jogador = ""
         self.input_ativo = True
@@ -24,7 +28,7 @@ class Menu:
         self.cor_botao_hover = (0, 200, 0)
         
         # Estado do botão
-        self.botao_rect = pygame.Rect(0, 0, 200, 50)
+        self.botao_rect = pygame.Rect(0, 0, 250, 50)
         self.botao_hover = False
         
     def handle_events(self):
@@ -72,17 +76,20 @@ class Menu:
         self._draw_background_elements()
         
         # Título do jogo
-        titulo = self.font_titulo.render("TORRE DEFENSE", True, self.cor_titulo)
-        titulo_rect = titulo.get_rect(center=(WIDTH // 2, HEIGHT // 4))
+        titulo = self.font_titulo.render("TOWER DEFENSE", True, self.cor_titulo)
+        titulo_rect = titulo.get_rect(center=(WIDTH // 2, 50))
         self.screen.blit(titulo, titulo_rect)
         
         # Instrução
         instrucao = self.font_normal.render("Digite seu nome:", True, self.cor_texto)
-        instrucao_rect = instrucao.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 40))
+        instrucao_rect = instrucao.get_rect(center=(WIDTH // 2, HEIGHT - 225))
         self.screen.blit(instrucao, instrucao_rect)
         
+        # Ranking
+        self._draw_ranking()
+                
         # Campo de input
-        input_rect = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2, 300, 50)
+        input_rect = pygame.Rect(WIDTH // 2 - 150, HEIGHT - 200, 300, 50)
         cor_input = self.cor_input_ativo if self.input_ativo else self.cor_input
         pygame.draw.rect(self.screen, cor_input, input_rect, border_radius=10)
         pygame.draw.rect(self.screen, self.cor_texto, input_rect, 2, border_radius=10)
@@ -99,7 +106,7 @@ class Menu:
             pygame.draw.rect(self.screen, self.cor_texto, cursor_rect)
         
         # Botão de iniciar
-        self.botao_rect.center = (WIDTH // 2, HEIGHT // 2 + 100)
+        self.botao_rect.center = (WIDTH // 2, HEIGHT - 100)
         cor_botao = self.cor_botao_hover if self.botao_hover else self.cor_botao
         pygame.draw.rect(self.screen, cor_botao, self.botao_rect, border_radius=15)
         pygame.draw.rect(self.screen, self.cor_texto, self.botao_rect, 2, border_radius=15)
@@ -109,19 +116,48 @@ class Menu:
         self.screen.blit(texto_botao, texto_botao_rect)
         
         # Texto de instruções adicionais
-        if not self.nome_jogador.strip():
-            aviso = self.font_pequena.render("Digite um nome para continuar", True, (255, 100, 100))
-            aviso_rect = aviso.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 60))
-            self.screen.blit(aviso, aviso_rect)
+        #if not self.nome_jogador.strip():
+        #    aviso = self.font_pequena.render("Digite um nome para continuar", True, (255, 100, 100))
+        #    aviso_rect = aviso.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+        #    self.screen.blit(aviso, aviso_rect)
         
         instrucoes = self.font_pequena.render("Pressione ESC para sair", True, (200, 200, 200))
         instrucoes_rect = instrucoes.get_rect(center=(WIDTH // 2, HEIGHT - 50))
         self.screen.blit(instrucoes, instrucoes_rect)
 
+    def _draw_ranking(self):
+        # 01 - Nome - Wave 000 - 000 Pontos
+        linhas = []
+        
+        cont = 0
+        for jogador in self.database.obter_top_10():
+            linhas.append(f"{str(cont+1).zfill(2)} - {jogador[0]} - Wave {str(jogador[2]).zfill(3)} - {str(jogador[1]).zfill(3)} Pontos")
+            cont = cont + 1
+        
+        #while (cont < 10):
+        #    linhas.append(f"{str(cont+1).zfill(2)} - XXXX - Wave XXX - XXX Pontos")
+        #    cont = cont + 1
+        
+        ranking_height = 100
+        ranking = self.font_normal.render("RANKING", True, self.cor_texto)
+        ranking_rect = ranking.get_rect(center=(WIDTH // 2, ranking_height))
+        self.screen.blit(ranking, ranking_rect)
+
+        ranking_height = 125
+        cont = 1
+        for linha in linhas:
+            texto = self.font_ranking.render(linha, True, self.cor_texto)
+            texto_rect = texto.get_rect(center=(WIDTH // 2, ranking_height + 20 * cont))
+            self.screen.blit(
+                texto,
+                texto_rect
+            )
+            cont += 1
+
     def _draw_background_elements(self):
         """Desenha elementos decorativos de fundo"""
         # Torres decorativas
-        for i in range(3):
+        for i in range(4):
             x = 100 + i * 200
             y = 100
             pygame.draw.rect(self.screen, BLUE, (x-15, y-15, 30, 30))
