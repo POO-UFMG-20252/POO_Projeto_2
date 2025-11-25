@@ -60,7 +60,7 @@ class Jogo:
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.running = False
+                pygame.quit()
             
             if event.type == pygame.MOUSEBUTTONDOWN and not self.game_over:
                 if event.button == 1:  # Clique esquerdo - construir
@@ -76,8 +76,8 @@ class Jogo:
                 elif event.key == pygame.K_3:
                     self.torre_selecionada = 2
                 elif event.key == pygame.K_ESCAPE:
-                    self.running = False
-    
+                    self.game_over = True
+                
     def construir_torre(self):
         mx, my = pygame.mouse.get_pos()
         tipo_torre = self.tipos_torres[self.torre_selecionada]
@@ -366,7 +366,6 @@ def main():
                 running = False
         
         elif estado == "jogo":
-            
             # Se o jogo acabou, NÃO chamar handle_events()
             if jogo.game_over:
                 jogo.draw()  # ainda desenha a tela normal
@@ -388,7 +387,6 @@ def main():
                         elif event.key == pygame.K_ESCAPE:
                             estado = "menu"
                             jogo = None
-
             else:
                 # Jogo normal (não está em game over)
                 jogo.handle_events()
