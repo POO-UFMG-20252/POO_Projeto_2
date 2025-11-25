@@ -3,95 +3,84 @@ from entidade.inimigos.impl import InimigoNormal, InimigoRapido, InimigoForte
 
 class Onda:
     def __init__(self, numero_onda):
-        self.numero = numero_onda
-        self.inimigos_restantes = self._calcular_total_inimigos()
-        self.inimigos_por_lote = self._calcular_inimigos_por_lote()
-        self.tempo_entre_lotes = 120  # Aumentei para 2 segundos entre lotes
-        self.tempo_entre_inimigos = 30  # 0.3 segundos entre inimigos no mesmo lote
-        self.timer_lote = 0
-        self.timer_inimigo = 0
-        self.ativa = True
-        self.spawnando_lote = False
-        self.inimigos_para_spawnar = []
-        self.inimigos_spawnados_no_lote = 0
+        self.__numero = numero_onda
+        self.__inimigos_restantes = self._calcular_total_inimigos()
+        self.__inimigos_por_lote = self._calcular_inimigos_por_lote()
+        self.__tempo_entre_lotes = 120  
+        self.__tempo_entre_inimigos = 30
+        self.__timer_lote = 0
+        self.__timer_inimigo = 0
+        self.__ativa = True
+        self.__spawnando_lote = False
+        self.__inimigos_para_spawnar = []
+        self.__inimigos_spawnados_no_lote = 0
         
-        # Definir composição da onda baseada no número
-        self.composicao = self._definir_composicao()
+        self.__composicao = self._definir_composicao()
     
     def _calcular_total_inimigos(self):
-        """Calcula o total de inimigos baseado no número da onda"""
-        return 5 + (self.numero * 2)  # Reduzi o crescimento
+        return 5 + (self.__numero * 2)  
     
     def _calcular_inimigos_por_lote(self):
-        """Calcula quantos inimigos spawnam por lote"""
-        return min(2 + (self.numero // 3), 5)  # Reduzi o máximo por lote
+        return min(2 + (self.__numero // 3), 5)  
     
     def _definir_composicao(self):
-        """Define a composição de tipos de inimigos na onda"""
-        if self.numero == 1:
-            return {"Normal": 1.0}  # 100% normais
-        elif self.numero <= 3:
-            return {"Normal": 0.8, "Rapido": 0.2}  # 80% normais, 20% rápidos
-        elif self.numero <= 5:
-            return {"Normal": 0.6, "Rapido": 0.3, "Forte": 0.1}  # 60% normais, 30% rápidos, 10% fortes
+        if self.__numero == 1:
+            return {"Normal": 1.0} 
+        elif self.__numero <= 3:
+            return {"Normal": 0.8, "Rapido": 0.2} 
+        elif self.__numero <= 5:
+            return {"Normal": 0.6, "Rapido": 0.3, "Forte": 0.1}  
         else:
-            return {"Normal": 0.4, "Rapido": 0.3, "Forte": 0.3}  # Mix balanceado
+            return {"Normal": 0.4, "Rapido": 0.3, "Forte": 0.3} 
     
     def update(self):
-        """Atualiza a onda e retorna lista de inimigos para spawnar"""
-        if not self.ativa or self.inimigos_restantes <= 0:
+        if not self.__ativa or self.__inimigos_restantes <= 0:
             return []
 
         inimigos_para_spawnar = []
         
-        # Sistema de lotes com spawn gradual
-        if not self.spawnando_lote:
-            self.timer_lote += 1
-            if self.timer_lote >= self.tempo_entre_lotes:
+        if not self.__spawnando_lote:
+            self.__timer_lote += 1
+            if self.__timer_lote >= self.__tempo_entre_lotes:
                 self._preparar_novo_lote()
         
-        # Spawn gradual dentro do lote
-        if self.spawnando_lote:
-            self.timer_inimigo += 1
-            if (self.timer_inimigo >= self.tempo_entre_inimigos and 
-                self.inimigos_spawnados_no_lote < len(self.inimigos_para_spawnar)):
+        if self.__spawnando_lote:
+            self.__timer_inimigo += 1
+            if (self.__timer_inimigo >= self.__tempo_entre_inimigos and 
+                self.__inimigos_spawnados_no_lote < len(self.__inimigos_para_spawnar)):
                 
-                inimigo = self.inimigos_para_spawnar[self.inimigos_spawnados_no_lote]
+                inimigo = self.__inimigos_para_spawnar[self.__inimigos_spawnados_no_lote]
                 inimigos_para_spawnar.append(inimigo)
-                self.inimigos_spawnados_no_lote += 1
-                self.inimigos_restantes -= 1
-                self.timer_inimigo = 0
+                self.__inimigos_spawnados_no_lote += 1
+                self.__inimigos_restantes -= 1
+                self.__timer_inimigo = 0
                 
-                # Verificar se terminou o lote
-                if self.inimigos_spawnados_no_lote >= len(self.inimigos_para_spawnar):
-                    self.spawnando_lote = False
-                    self.timer_lote = 0
+                if self.__inimigos_spawnados_no_lote >= len(self.__inimigos_para_spawnar):
+                    self.__spawnando_lote = False
+                    self.__timer_lote = 0
                     
-                    # Verificar se a onda terminou
-                    if self.inimigos_restantes <= 0:
-                        self.ativa = False
+                    if self.__inimigos_restantes <= 0:
+                        self.__ativa = False
         
         return inimigos_para_spawnar
     
     def _preparar_novo_lote(self):
-        """Prepara um novo lote de inimigos para spawn gradual"""
-        quantidade_lote = min(self.inimigos_por_lote, self.inimigos_restantes)
-        self.inimigos_para_spawnar = []
+        quantidade_lote = min(self.__inimigos_por_lote, self.__inimigos_restantes)
+        self.__inimigos_para_spawnar = []
         
         for _ in range(quantidade_lote):
             tipo_inimigo = self._escolher_tipo_inimigo()
-            self.inimigos_para_spawnar.append(tipo_inimigo)
+            self.__inimigos_para_spawnar.append(tipo_inimigo)
         
-        self.spawnando_lote = True
-        self.inimigos_spawnados_no_lote = 0
-        self.timer_inimigo = 0
+        self.__spawnando_lote = True
+        self.__inimigos_spawnados_no_lote = 0
+        self.__timer_inimigo = 0
     
     def _escolher_tipo_inimigo(self):
-        """Escolhe aleatoriamente o tipo de inimigo baseado na composição"""
         rand = random.random()
         acumulado = 0
         
-        for tipo, probabilidade in self.composicao.items():
+        for tipo, probabilidade in self.__composicao.items():
             acumulado += probabilidade
             if rand <= acumulado:
                 if tipo == "Normal":
@@ -101,16 +90,103 @@ class Onda:
                 elif tipo == "Forte":
                     return InimigoForte()
         
-        # Fallback
         return InimigoNormal()
     
     def esta_ativa(self):
-        return self.ativa or self.spawnando_lote
+        return self.__ativa or self.__spawnando_lote
     
     def get_info(self):
         return {
-            "numero": self.numero,
-            "inimigos_restantes": self.inimigos_restantes,
-            "composicao": self.composicao,
-            "spawnando_lote": self.spawnando_lote
+            "numero": self.__numero,
+            "inimigos_restantes": self.__inimigos_restantes,
+            "composicao": self.__composicao,
+            "spawnando_lote": self.__spawnando_lote
         }
+    
+    @property
+    def numero(self):
+        return self.__numero
+
+    @numero.setter
+    def numero(self, valor):
+        self.__numero = valor
+
+    @property
+    def inimigos_restantes(self):
+        return self.__inimigos_restantes
+
+    @inimigos_restantes.setter
+    def inimigos_restantes(self, valor):
+        self.__inimigos_restantes = valor
+
+    @property
+    def inimigos_por_lote(self):
+        return self.__inimigos_por_lote
+
+    @inimigos_por_lote.setter
+    def inimigos_por_lote(self, valor):
+        self.__inimigos_por_lote = valor
+
+    @property
+    def tempo_entre_lotes(self):
+        return self.__tempo_entre_lotes
+
+    @tempo_entre_lotes.setter
+    def tempo_entre_lotes(self, valor):
+        self.__tempo_entre_lotes = valor
+
+    @property
+    def tempo_entre_inimigos(self):
+        return self.__tempo_entre_inimigos
+
+    @tempo_entre_inimigos.setter
+    def tempo_entre_inimigos(self, valor):
+        self.__tempo_entre_inimigos = valor
+
+    @property
+    def timer_lote(self):
+        return self.__timer_lote
+
+    @timer_lote.setter
+    def timer_lote(self, valor):
+        self.__timer_lote = valor
+
+    @property
+    def timer_inimigo(self):
+        return self.__timer_inimigo
+
+    @timer_inimigo.setter
+    def timer_inimigo(self, valor):
+        self.__timer_inimigo = valor
+
+    @property
+    def ativa(self):
+        return self.__ativa
+
+    @ativa.setter
+    def ativa(self, valor):
+        self.__ativa = valor
+
+    @property
+    def spawnando_lote(self):
+        return self.__spawnando_lote
+
+    @spawnando_lote.setter
+    def spawnando_lote(self, valor):
+        self.__spawnando_lote = valor
+
+    @property
+    def inimigos_para_spawnar(self):
+        return self.__inimigos_para_spawnar
+
+    @inimigos_para_spawnar.setter
+    def inimigos_para_spawnar(self, valor):
+        self.__inimigos_para_spawnar = valor
+
+    @property
+    def inimigos_spawnados_no_lote(self):
+        return self.__inimigos_spawnados_no_lote
+
+    @inimigos_spawnados_no_lote.setter
+    def inimigos_spawnados_no_lote(self, valor):
+        self.__inimigos_spawnados_no_lote = valor

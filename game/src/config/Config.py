@@ -3,6 +3,7 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 50, 50)
 GREEN = (50, 200, 50)
+DARK_GREEN = (0, 99, 29)
 BLUE = (50, 50, 255)
 YELLOW = (255, 255, 0)
 GREY = (200, 200, 200)
@@ -13,10 +14,16 @@ WIDTH, HEIGHT = 800, 600
 
 # Configurações de Jogo
 ENEMY_SPEED = 2
-ENEMY_HP = 10
-REWARD = 15
+ENEMY_HP = 20
+REWARD = 5
 TOWER_COST = 50
 TOWER_RANGE = 150
 TOWER_COOLDOWN = 30  # Frames entre tiros
 BULLET_SPEED = 7
 BULLET_DAMAGE = 5
+
+# Caminho (Waypoints) - Pontos por onde os inimigos passarão
+PATH = [
+    (0, 100), (200, 100), (200, 400), (500, 400), (500, 150), 
+    (700, 150), (700, 500), (800, 500)
+]

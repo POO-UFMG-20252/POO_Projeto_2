@@ -2,7 +2,7 @@ import pygame
 import math
 import os
 import sys
-from mapa import *
+from config import *
 from entidade.inimigos.impl import InimigoNormal, InimigoRapido, InimigoForte
 from entidade.inimigos import Onda
 from entidade.defesas.impl import TorreNormal, TorreSniper, TorreRapida
@@ -19,10 +19,8 @@ class Jogo:
         
         self.nome_jogador = nome_jogador
         
-        # Sistema de Player com pontuação
         self.player = Player(vida=10, dinheiro=120, inimigos_eliminados=0)
         
-        # Banco de dados
         self.db = database
         
         self.inimigos = []
@@ -34,7 +32,7 @@ class Jogo:
         self.wave_timer = 0
         self.game_over = False
         self.running = True
-        self.pontuacao_salva = False  # Flag para salvar apenas uma vez
+        self.pontuacao_salva = False 
         
         self.wave_atual = 1
         self.onda = Onda(self.wave_atual)
@@ -46,7 +44,6 @@ class Jogo:
         self.font_pequena = pygame.font.SysFont("Arial", 18)
         self.mostrar_leaderboard = False
         
-        # Sistema de seleção de torres
         self.tipos_torres = [
             {"classe": TorreNormal, "nome": "Normal", "custo": 50, "cor": BLUE},
             {"classe": TorreRapida, "nome": "Rápida", "custo": 75, "cor": YELLOW},
@@ -59,13 +56,14 @@ class Jogo:
     
     def handle_events(self):
         for event in pygame.event.get():
+            print(event)
             if event.type == pygame.QUIT:
                 pygame.quit()
             
-            if event.type == pygame.MOUSEBUTTONDOWN and not self.game_over:
-                if event.button == 1:  # Clique esquerdo - construir
+            if event.type == pygame.MOUSEBUTTONUP and not self.game_over:
+                if event.button == 1:
                     self.construir_torre()
-                elif event.button == 3:  # Clique direito - mudar tipo de torre
+                elif event.button == 3:
                     self.mudar_tipo_torre()
             
             if event.type == pygame.KEYDOWN:
@@ -98,7 +96,6 @@ class Jogo:
     
     def update(self):
         if not self.game_over:
-            # Sistema de waves
             if not self.onda.esta_ativa() and not self.aguardando_proxima_wave:
                 if len(self.inimigos) == 0:
                     self.aguardando_proxima_wave = True
@@ -112,27 +109,22 @@ class Jogo:
                     self.aguardando_proxima_wave = False
                     print(f" Wave {self.wave_atual} iniciada!")
             
-            # Spawn de inimigos controlado pela onda
             inimigos_novos = self.onda.update()
             for inimigo in inimigos_novos:
                 self.inimigos.append(inimigo)
 
-            # Atualizar Torres
             for torre in self.torres:
                 torre.update(self.inimigos, self.projeteis)
 
-            # Atualizar Projéteis
             for projetil in self.projeteis[:]:
                 projetil.update()
                 if not projetil.esta_ativo():
                     self.projeteis.remove(projetil)
 
-            # Atualizar Inimigos
             for inimigo in self.inimigos[:]:
                 dano_jogador = inimigo.update()
                 
                 if dano_jogador:
-                    # Inimigo chegou ao fim do caminho
                     self.vidas -= 1
                     self.player.receber_dano(1)
                     self.inimigos.remove(inimigo)
@@ -142,21 +134,17 @@ class Jogo:
                         self.salvar_pontuacao_final()
                 
                 elif not inimigo.esta_ativo():
-                    #  INIMIGO FOI MORTO - ADICIONA PONTUAÇÃO E RECOMPENSA 
                     self.dinheiro += inimigo.recompensa
                     self.player.adicionar_dinheiro(inimigo.recompensa)
                     
-                    # ADICIONA OS PONTOS BASEADO NO TIPO DE INIMIGO
                     self.player.adicionar_pontuacao(inimigo.pontos)
                     self.player.adicionar_inimigo(1)
                     self.inimigos.remove(inimigo)
         else:
-            # Se o jogo acabou, garante que a pontuação foi salva
             if not self.pontuacao_salva:
                 self.salvar_pontuacao_final()
     
     def salvar_pontuacao_final(self):
-        """Salva a pontuação final no banco de dados"""
         if not self.pontuacao_salva:
             print("\n" + "="*50)
             print(f" GAME OVER - {self.nome_jogador}")
@@ -168,7 +156,6 @@ class Jogo:
             print(f" Inimigos Eliminados: {self.player.inimigos_eliminados}")
             print("="*50)
             
-            # Salva no banco de dados
             sucesso = self.db.salvar_pontuacao(
                 nome_player=self.nome_jogador,
                 pontuacao=self.player.pontuacao,
@@ -181,7 +168,6 @@ class Jogo:
             if sucesso:
                 print(" Pontuação salva no leaderboard!")
                 
-                # Mostra o Top 10
                 top_10 = self.db.obter_top_10()
                 if top_10:
                     print("\n TOP 10 LEADERBOARD ")
@@ -193,26 +179,20 @@ class Jogo:
             self.pontuacao_salva = True
     
     def draw(self):
-        # Fundo (Grama)
-        self.screen.fill(GREEN)
+        self.screen.fill(DARK_GREEN)
         
-        # Desenhar Caminho
         if len(PATH) > 1:
             pygame.draw.lines(self.screen, PATH_COLOR, False, PATH, 40)
         
-        # Desenhar Torres
         for torre in self.torres:
             torre.draw(self.screen)
             
-        # Desenhar Inimigos
         for inimigo in self.inimigos:
             inimigo.draw(self.screen)
             
-        # Desenhar Projéteis
         for projetil in self.projeteis:
             projetil.draw(self.screen)
         
-        # UI (Interface)
         self.desenhar_ui()
 
         if self.game_over and self.mostrar_leaderboard:
@@ -223,7 +203,6 @@ class Jogo:
         lives_text = self.font.render(f"Vidas: {self.vidas}", True, BLACK)
         player_text = self.font_pequena.render(f"Jogador: {self.nome_jogador}", True, BLACK)
         
-        #  MOSTRA A PONTUAÇÃO NA TELA 
         pontuacao_text = self.font.render(f"Pontos: {self.player.pontuacao}", True, (255, 215, 0))
         eliminados_text = self.font_pequena.render(f"Eliminados: {self.player.inimigos_eliminados}", True, BLACK)
         
@@ -233,19 +212,17 @@ class Jogo:
         self.screen.blit(eliminados_text, (10, 100))
         self.screen.blit(player_text, (10, 125))
         
-        # Info da wave
         wave_text = self.font.render(f"Wave: {self.wave_atual}", True, BLACK)
-        inimigos_wave_text = self.font.render(f"Inimigos: {self.onda.inimigos_restantes}", True, BLACK)
+        inimigos_wave_text = self.font.render(f"Próximos Inimigos: {self.onda.inimigos_restantes}", True, BLACK)
         
-        self.screen.blit(wave_text, (WIDTH - 150, 10))
-        self.screen.blit(inimigos_wave_text, (WIDTH - 150, 40))
+        self.screen.blit(wave_text, (WIDTH - 230, 10))
+        self.screen.blit(inimigos_wave_text, (WIDTH - 230, 40))
         
         if self.aguardando_proxima_wave:
             tempo_restante = ((self.tempo_entre_waves - self.wave_timer) // 60) + 1
             prox_wave_text = self.font.render(f"Próxima wave em: {tempo_restante}s", True, RED)
             self.screen.blit(prox_wave_text, (WIDTH // 2 - 100, 20))
 
-        # Info da torre selecionada
         tipo_atual = self.tipos_torres[self.torre_selecionada]
         torre_text = self.font.render(
             f"Torre: {tipo_atual['nome']} (${tipo_atual['custo']}) - Tecla {self.torre_selecionada + 1}", 
@@ -253,7 +230,6 @@ class Jogo:
         )
         self.screen.blit(torre_text, (10, HEIGHT - 70))
         
-        # Instruções
         instrucoes = self.font.render("Clique Esq: Construir | Clique Dir: Mudar Torre | 1,2,3: Selecionar Torre", True, WHITE)
         self.screen.blit(instrucoes, (10, HEIGHT - 40))
 
@@ -261,18 +237,14 @@ class Jogo:
             self.desenhar_tela_game_over()
     
     def desenhar_tela_game_over(self):
-        """Desenha a tela de game over com pontuação"""
-        # Fundo semi-transparente
         overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 200))
         self.screen.blit(overlay, (0, 0))
         
-        # Título
         titulo = self.font.render("GAME OVER", True, (255, 50, 50))
         titulo_rect = titulo.get_rect(center=(WIDTH // 2, HEIGHT // 4))
         self.screen.blit(titulo, titulo_rect)
         
-        # Estatísticas do jogador
         stats = [
             f"Jogador: {self.nome_jogador}",
             f" Pontuação Final: {self.player.pontuacao}",
@@ -287,7 +259,6 @@ class Jogo:
             texto_rect = texto.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 90 + i * 30))
             self.screen.blit(texto, texto_rect)
         
-        # Instruções para voltar ao menu
         instrucoes = self.font.render("Pressione ESC para voltar ao menu", True, (200, 200, 200))
         instrucoes_rect = instrucoes.get_rect(center=(WIDTH // 2, HEIGHT - 50))
         self.screen.blit(instrucoes, instrucoes_rect)
@@ -332,7 +303,6 @@ class Jogo:
         pygame.quit()
 
 
-# Configuração do path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
 
@@ -353,7 +323,6 @@ def main():
     
     while running:
         if estado == "menu":
-            # Menu principal
             resultado = menu.handle_events()
             menu.update()
             menu.draw()
@@ -366,20 +335,17 @@ def main():
                 running = False
         
         elif estado == "jogo":
-            # Se o jogo acabou, NÃO chamar handle_events()
             if jogo.game_over:
-                jogo.draw()  # ainda desenha a tela normal
-
+                jogo.draw()  
+                
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
 
                     if event.type == pygame.KEYDOWN:
-                        # PRIMEIRO ENTER → abrir ranking
                         if event.key == pygame.K_RETURN and not jogo.mostrar_leaderboard:
                             jogo.mostrar_leaderboard = True
 
-                        # SEGUNDO ENTER → voltar para o menu
                         elif event.key == pygame.K_RETURN and jogo.mostrar_leaderboard:
                             estado = "menu"
                             jogo = None
@@ -388,7 +354,6 @@ def main():
                             estado = "menu"
                             jogo = None
             else:
-                # Jogo normal (não está em game over)
                 jogo.handle_events()
                 jogo.update()
                 jogo.draw()

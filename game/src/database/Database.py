@@ -4,13 +4,11 @@ import os
 
 class Database:
     def __init__(self, db_name="tower_defense.db"):
-        # Garante que o banco fica na pasta database
         db_path = os.path.join(os.path.dirname(__file__), db_name)
         self.db_name = db_path
         self.criar_tabelas()
     
     def criar_tabelas(self):
-        """Cria a tabela leaderboard se não existir"""
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
         
@@ -33,7 +31,6 @@ class Database:
     
     def salvar_pontuacao(self, nome_player, pontuacao, wave_alcancada, 
                          dinheiro_final, torres_construidas, inimigos_eliminados):
-        """Salva a pontuação completa do jogador no leaderboard"""
         try:
             conn = sqlite3.connect(self.db_name)
             cursor = conn.cursor()
@@ -55,7 +52,6 @@ class Database:
             return False
     
     def obter_top_10(self):
-        """Retorna os 10 melhores jogadores"""
         try:
             conn = sqlite3.connect(self.db_name)
             cursor = conn.cursor()
@@ -77,7 +73,6 @@ class Database:
             return []
     
     def obter_melhor_pontuacao_player(self, nome_player):
-        """Retorna a melhor pontuação de um jogador específico"""
         try:
             conn = sqlite3.connect(self.db_name)
             cursor = conn.cursor()
@@ -103,7 +98,6 @@ class Database:
             return None
     
     def obter_estatisticas_player(self, nome_player):
-        """Retorna estatísticas gerais do jogador"""
         try:
             conn = sqlite3.connect(self.db_name)
             cursor = conn.cursor()

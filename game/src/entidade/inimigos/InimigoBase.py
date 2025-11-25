@@ -1,74 +1,139 @@
-import pygame
+from abc import abstractmethod
 import math
 from entidade import Entidade
-from mapa import PATH, ENEMY_SPEED, ENEMY_HP, REWARD, RED, GREEN
+from config import PATH
 
 class InimigoBase(Entidade):
     def __init__(self, x, y, vida, velocidade, recompensa, cor, nome, tamanho=15, pontos=1):
         super().__init__(x, y)
-        self.path_index = 0
-        self.hp = vida
-        self.max_hp = vida
-        self.velocidade = velocidade
-        self.recompensa = recompensa
-        self.cor = cor
-        self.nome = nome
-        self.tamanho = tamanho
-        self.alive = True
-        self.pontos = pontos
-    def move(self):
-        if self.path_index < len(PATH) - 1:
-            target_x, target_y = PATH[self.path_index + 1]
-            # Vetor de direção
-            dx = target_x - self.x
-            dy = target_y - self.y
-            dist = math.hypot(dx, dy)
-            
-            if dist < self.velocidade:
-                # Chegou no waypoint, vai para o próximo
-                self.path_index += 1
-            else:
-                # Normaliza e move
-                self.x += (dx / dist) * self.velocidade
-                self.y += (dy / dist) * self.velocidade
-        else:
-            # Chegou ao fim do caminho
-            return True # Retorna True se causou dano ao jogador
-        return False
-
+        self._path_index = 0
+        self._hp = vida
+        self._max_hp = vida
+        self._velocidade = velocidade
+        self._recompensa = recompensa
+        self._cor = cor
+        self._nome = nome
+        self._tamanho = tamanho
+        self._alive = True
+        self._pontos = pontos
+        
+    @abstractmethod
+    def draw(self, screen):
+        pass    
+    
     def update(self):
         return self.move()
-
-    def draw(self, screen):
-        # Desenha o inimigo
-        pygame.draw.circle(screen, self.cor, (int(self.x), int(self.y)), self.tamanho)
-        
-        # Barra de vida
-        ratio = self.hp / self.max_hp
-        barra_width = self.tamanho * 2
-        pygame.draw.rect(screen, RED, (self.x - barra_width//2, self.y - self.tamanho - 10, barra_width, 5))
-        pygame.draw.rect(screen, GREEN, (self.x - barra_width//2, self.y - self.tamanho - 10, barra_width * ratio, 5))
-        
-        # Nome do inimigo (opcional)
-        if self.tamanho > 15:  # Só mostra nome em inimigos maiores
-            font = pygame.font.SysFont(None, 16)
-            nome_texto = font.render(self.nome, True, (255, 255, 255))
-            screen.blit(nome_texto, (self.x - nome_texto.get_width()//2, self.y - self.tamanho - 25))
     
+    def move(self):
+        if self._path_index < len(PATH) - 1:
+            target_x, target_y = PATH[self._path_index + 1]
+            dx = target_x - self._x
+            dy = target_y - self._y
+            dist = math.hypot(dx, dy)
+            
+            if dist < self._velocidade:
+                self._path_index += 1
+            else:
+                self._x += (dx / dist) * self._velocidade
+                self._y += (dy / dist) * self._velocidade
+        else:
+            return True
+        
+        return False
+
     def tomar_dano(self, dano):
-        self.hp -= dano
-        if self.hp <= 0:
-            self.alive = False
-            self.ativo = False
+        self._hp -= dano
+        if self._hp <= 0:
+            self._alive = False
+            self._ativo = False
     
     def esta_ativo(self):
-        return self.ativo and self.alive
+        return self._ativo and self._alive
 
     def get_info(self):
-        """Retorna informações do inimigo"""
         return {
-            "nome": self.nome,
-            "vida": self.hp,
-            "velocidade": self.velocidade,
-            "recompensa": self.recompensa
+            "nome": self._nome,
+            "vida": self._hp,
+            "velocidade": self._velocidade,
+            "recompensa": self._recompensa
         }
+        
+    @property
+    def path_index(self):
+        return self._path_index
+
+    @path_index.setter
+    def path_index(self, valor):
+        self._path_index = valor
+
+    @property
+    def hp(self):
+        return self._hp
+
+    @hp.setter
+    def hp(self, valor):
+        self._hp = valor
+
+    @property
+    def max_hp(self):
+        return self._max_hp
+
+    @max_hp.setter
+    def max_hp(self, valor):
+        self._max_hp = valor
+
+    @property
+    def velocidade(self):
+        return self._velocidade
+
+    @velocidade.setter
+    def velocidade(self, valor):
+        self._velocidade = valor
+
+    @property
+    def recompensa(self):
+        return self._recompensa
+
+    @recompensa.setter
+    def recompensa(self, valor):
+        self._recompensa = valor
+
+    @property
+    def cor(self):
+        return self._cor
+
+    @cor.setter
+    def cor(self, valor):
+        self._cor = valor
+
+    @property
+    def nome(self):
+        return self._nome
+
+    @nome.setter
+    def nome(self, valor):
+        self._nome = valor
+
+    @property
+    def tamanho(self):
+        return self._tamanho
+
+    @tamanho.setter
+    def tamanho(self, valor):
+        self._tamanho = valor
+
+    @property
+    def alive(self):
+        return self._alive
+
+    @alive.setter
+    def alive(self, valor):
+        self._alive = valor
+
+    @property
+    def pontos(self):
+        return self._pontos
+
+    @pontos.setter
+    def pontos(self, valor):
+        self._pontos = valor

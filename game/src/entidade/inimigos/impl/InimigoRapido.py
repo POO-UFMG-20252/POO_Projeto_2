@@ -1,5 +1,5 @@
 from entidade.inimigos.InimigoBase import InimigoBase
-from mapa import PATH, ENEMY_SPEED, ENEMY_HP, REWARD
+from config import PATH, ENEMY_SPEED, ENEMY_HP, REWARD
 import pygame
 
 class InimigoRapido(InimigoBase):
@@ -7,33 +7,29 @@ class InimigoRapido(InimigoBase):
         super().__init__(
             x=PATH[0][0],
             y=PATH[0][1],
-            vida=int(ENEMY_HP * 0.6),  # 40% menos vida
-            velocidade=ENEMY_SPEED * 1.8,  # 80% mais rápido
-            recompensa=int(REWARD * 1.2),  # 20% mais recompensa
-            cor=(255, 165, 0),  # Laranja
+            vida=int(ENEMY_HP * 0.6), 
+            velocidade=ENEMY_SPEED * 1.8,
+            recompensa=int(REWARD * 1.2),
+            cor=(255, 165, 0),
             nome="Rápido",
             tamanho=12,
             pontos = 2
         )
 
     def draw(self, screen):
-        """Desenha o inimigo rápido com visual diferenciado"""
-        # Corpo principal
-        pygame.draw.circle(screen, self.cor, (int(self.x), int(self.y)), self.tamanho)
+        pygame.draw.circle(screen, self._cor, (int(self._x), int(self._y)), self._tamanho)
         
-        # Efeito de velocidade (rastro)
         for i in range(1, 4):
             alpha = 100 - (i * 25)
-            if self.path_index > 0 and len(PATH) > self.path_index:
-                prev_x, prev_y = PATH[self.path_index]
-                trail_x = self.x - (self.x - prev_x) * 0.1 * i
-                trail_y = self.y - (self.y - prev_y) * 0.1 * i
-                surface = pygame.Surface((self.tamanho*2, self.tamanho*2), pygame.SRCALPHA)
-                pygame.draw.circle(surface, (*self.cor[:3], alpha), (self.tamanho, self.tamanho), self.tamanho * 0.7)
-                screen.blit(surface, (trail_x - self.tamanho, trail_y - self.tamanho))
+            if self._path_index > 0 and len(PATH) > self._path_index:
+                prev_x, prev_y = PATH[self._path_index]
+                trail_x = self._x - (self._x - prev_x) * 0.1 * i
+                trail_y = self._y - (self._y - prev_y) * 0.1 * i
+                surface = pygame.Surface((self._tamanho*2, self._tamanho*2), pygame.SRCALPHA)
+                pygame.draw.circle(surface, (*self._cor[:3], alpha), (self._tamanho, self._tamanho), self._tamanho * 0.7)
+                screen.blit(surface, (trail_x - self._tamanho, trail_y - self._tamanho))
         
-        # Barra de vida
-        ratio = self.hp / self.max_hp
-        barra_width = self.tamanho * 2
-        pygame.draw.rect(screen, (200, 0, 0), (self.x - barra_width//2, self.y - self.tamanho - 10, barra_width, 4))
-        pygame.draw.rect(screen, (0, 200, 0), (self.x - barra_width//2, self.y - self.tamanho - 10, barra_width * ratio, 4))
+        ratio = self._hp / self._max_hp
+        barra_width = self._tamanho * 2
+        pygame.draw.rect(screen, (200, 0, 0), (self._x - barra_width//2, self._y - self._tamanho - 10, barra_width, 4))
+        pygame.draw.rect(screen, (0, 200, 0), (self._x - barra_width//2, self._y - self._tamanho - 10, barra_width * ratio, 4))
